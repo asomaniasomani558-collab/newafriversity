@@ -1,0 +1,6 @@
+{
+  "name": "Afriversity",
+  "description": "Personalized opportunity, readiness, and career platform for African students and young professionals. Find the right opportunity. Know what's missing. Get ready. Apply.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
