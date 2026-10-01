@@ -47,6 +47,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import { Opportunity, OpportunityType, UserProfile, VerificationStatus } from '../../types';
 import { getAdminCredentials, updateAdminCredentials } from '../../utils/adminAuth';
+import { AdminOverviewDashboard } from './AdminOverviewDashboard';
 
 export const AdminPortalView: React.FC = () => {
   const {
@@ -676,7 +677,8 @@ export const AdminPortalView: React.FC = () => {
       {/* 3. Tab Navigation Controller */}
       <div className="flex border-b border-stone-200 dark:border-stone-800 gap-2 overflow-x-auto">
         {[
-          { id: 'dashboard', label: 'Executive Dashboard & Earnings', icon: LayoutDashboard },
+          { id: 'overview', label: 'Overview Dashboard', icon: LayoutDashboard },
+          { id: 'dashboard', label: 'Executive Earnings', icon: Wallet },
           { id: 'users', label: 'User Oversight & Verification', icon: Users, count: totalUsersCount },
           { id: 'opportunities', label: 'Opportunity Catalog Governance', icon: Briefcase, count: opportunities.length },
           { id: 'analytics', label: 'Platform Analytics', icon: BarChart3 },
@@ -708,6 +710,11 @@ export const AdminPortalView: React.FC = () => {
           );
         })}
       </div>
+
+      {/* 3.5 TAB CONTENT: REAL-TIME OVERVIEW DASHBOARD */}
+      {currentTab === 'overview' && (
+        <AdminOverviewDashboard />
+      )}
 
       {/* 4. TAB CONTENT: EXECUTIVE DASHBOARD & EARNINGS SUMMARY */}
       {currentTab === 'dashboard' && (
@@ -815,7 +822,7 @@ export const AdminPortalView: React.FC = () => {
 
               <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-[11px] text-stone-500 dark:text-stone-400">
                 <span>Standard Booking Fee</span>
-                <span className="font-mono font-bold text-stone-800 dark:text-stone-200">{formatCurrency(25)} / slot</span>
+                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">₵30.00 GHS / slot</span>
               </div>
             </div>
 

@@ -61,6 +61,14 @@ export const AuthPage: React.FC = () => {
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [otpTimer, setOtpTimer] = useState<number>(60);
   const [otpError, setOtpError] = useState<string>('');
+  const [emailDispatching, setEmailDispatching] = useState<boolean>(false);
+  const [emailDispatchResult, setEmailDispatchResult] = useState<{
+    delivered?: boolean;
+    provider?: string;
+    error?: string;
+    devCode?: string;
+    message?: string;
+  } | null>(null);
 
   // Multi-step Forgot Password with Email OTP Verification state
   const [forgotStep, setForgotStep] = useState<'email' | 'otp' | 'new_password' | 'success'>('email');
@@ -152,20 +160,42 @@ export const AuthPage: React.FC = () => {
     }
   };
 
+  const sendEmailOtp = async (targetEmail: string, code: string, recipientName?: string, userRole?: string) => {
+    setEmailDispatching(true);
+    setEmailDispatchResult(null);
+    try {
+      const resp = await fetch('/api/auth/send-verification-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: targetEmail,
+          otp: code,
+          fullName: recipientName,
+          role: userRole
+        })
+      });
+      const data = await resp.json();
+      setEmailDispatchResult(data);
+    } catch (err: any) {
+      console.warn('Email dispatch call error:', err);
+      setEmailDispatchResult({
+        delivered: false,
+        error: 'Network error calling email verification service.',
+        devCode: code
+      });
+    } finally {
+      setEmailDispatching(false);
+    }
+  };
+
   const handleResendOtp = () => {
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedOtp(newCode);
     setOtpTimer(60);
     setOtpError('');
     setOtpDigits(['', '', '', '', '', '']);
-  };
-
-  const handleAutoFillOtp = () => {
-    if (generatedOtp) {
-      setOtpDigits(generatedOtp.split(''));
-      setOtpError('');
-      const lastInput = document.getElementById('otp-input-5');
-      lastInput?.focus();
+    if (pendingAccount) {
+      sendEmailOtp(pendingAccount.email, newCode, pendingAccount.profile.fullName, pendingAccount.profile.role);
     }
   };
 
@@ -346,7 +376,7 @@ export const AuthPage: React.FC = () => {
         }
       };
 
-      // Generate 6-digit OTP verification code to prevent fraudulent registrations
+      // Generate 6-digit OTP verification code and dispatch via real email service
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOtp(otp);
       setPendingAccount({
@@ -358,6 +388,7 @@ export const AuthPage: React.FC = () => {
       setOtpTimer(60);
       setOtpError('');
       setAuthMode('verify_otp');
+      sendEmailOtp(cleanEmail, otp, fullName, 'student');
     }
   };
 
@@ -479,7 +510,7 @@ export const AuthPage: React.FC = () => {
         }
       };
 
-      // Generate 6-digit OTP verification code to prevent fraudulent registrations
+      // Generate 6-digit OTP verification code and dispatch via real email service
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOtp(otp);
       setPendingAccount({
@@ -491,6 +522,7 @@ export const AuthPage: React.FC = () => {
       setOtpTimer(60);
       setOtpError('');
       setAuthMode('verify_otp');
+      sendEmailOtp(cleanEmail, otp, fullName, 'mentor');
     }
   };
 
@@ -565,14 +597,8 @@ export const AuthPage: React.FC = () => {
     setResetTimer(60);
     setResetError('');
     setResetOtpDigits(['', '', '', '', '', '']);
-  };
-
-  const handleAutoFillResetOtp = () => {
-    if (resetOtp) {
-      setResetOtpDigits(resetOtp.split(''));
-      setResetError('');
-      const lastInput = document.getElementById('reset-otp-input-5');
-      lastInput?.focus();
+    if (resetEmail) {
+      sendEmailOtp(resetEmail, newCode, resetTargetUser?.fullName, resetTargetUser?.role);
     }
   };
 
@@ -607,6 +633,7 @@ export const AuthPage: React.FC = () => {
     setResetOtpDigits(['', '', '', '', '', '']);
     setResetError('');
     setForgotStep('otp');
+    sendEmailOtp(cleanEmail, otpCode, target?.fullName, target?.role);
   };
 
   const handleVerifyResetOtp = (e?: React.FormEvent) => {
@@ -937,25 +964,37 @@ export const AuthPage: React.FC = () => {
                     </p>
                   </div>
 
-                  {/* Email Dispatch Notification Banner (Code sent directly to user's email, not displayed on site) */}
-                  <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-200">
-                        <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                        <span>Verification Code Sent Directly to Your Email</span>
-                      </span>
-                      <span className="text-[10px] bg-amber-200/70 dark:bg-amber-900/60 px-2 py-0.5 rounded font-mono font-bold text-amber-900 dark:text-amber-200">
-                        Dispatched
-                      </span>
+                  {/* Real Email Service Dispatch Notification Banner */}
+                  {emailDispatching ? (
+                    <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 space-y-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-200">
+                        <RefreshCw className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-spin" />
+                        <span>Dispatching Verification Code to Your Email Inbox...</span>
+                      </div>
+                      <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                        Connecting to real email service for <strong>{pendingAccount?.email}</strong>.
+                      </p>
                     </div>
-                    <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                      A 6-digit one-time verification code has been dispatched directly to your inbox at <strong>{pendingAccount?.email}</strong>. Please check your email (including spam/junk folder) and enter the code below to verify your account.
-                    </p>
-                    <div className="flex items-center gap-1.5 pt-1 text-[11px] text-stone-500 dark:text-stone-400 border-t border-amber-200/60 dark:border-amber-900/40">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>For security reasons, verification codes are sent directly to your email and never displayed on this page.</span>
+                  ) : (
+                    <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 space-y-2 animate-in fade-in">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-200">
+                          <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                          <span>Verification Code Dispatched Directly to Your Email</span>
+                        </span>
+                        <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-mono font-bold px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
+                          Dispatched
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-700 dark:text-stone-300 leading-relaxed">
+                        A 6-digit one-time verification code has been dispatched directly to your inbox at <strong>{pendingAccount?.email}</strong>. Please check your email inbox (and spam/junk folder) and enter the code below to complete authentication.
+                      </p>
+                      <div className="flex items-center gap-1.5 pt-1 text-[11px] text-stone-500 dark:text-stone-400 border-t border-amber-200/60 dark:border-amber-900/40">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>For strict security, verification codes are sent directly to your email inbox and never displayed on this website.</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* 6-Digit Code Inputs */}
                   <div className="space-y-2 pt-2">

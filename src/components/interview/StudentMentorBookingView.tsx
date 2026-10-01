@@ -163,8 +163,8 @@ export const StudentMentorBookingView: React.FC<StudentMentorBookingViewProps> =
 
           <div className="flex items-center gap-2 sm:self-center">
             <div className="text-right hidden sm:block">
-              <div className="text-xs font-bold text-stone-900 dark:text-white">$25 / Session</div>
-              <div className="text-[10px] text-stone-500">Scholarship subsidy eligible</div>
+              <div className="text-xs font-bold text-stone-900 dark:text-white">₵30 GHS / Session</div>
+              <div className="text-[10px] text-stone-500">Standard Faculty Session Fee</div>
             </div>
           </div>
         </div>
@@ -360,8 +360,8 @@ export const StudentMentorBookingView: React.FC<StudentMentorBookingViewProps> =
                     <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-300 font-mono text-[10px] font-bold uppercase">
                       {slot.interviewType} Interview
                     </span>
-                    <span className="font-mono text-xs font-bold text-stone-900 dark:text-white">
-                      ${slot.feeUsd || 25}
+                    <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                      ₵{slot.feeGhs || 30} GHS
                     </span>
                   </div>
 
@@ -438,7 +438,7 @@ export const StudentMentorBookingView: React.FC<StudentMentorBookingViewProps> =
               <div className="flex items-center justify-between pt-1 border-t border-stone-200/60 dark:border-stone-700/60">
                 <span className="font-bold text-stone-700 dark:text-stone-300">Session Fee:</span>
                 <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-                  ${selectedSlotForBooking.feeUsd || 25} USD
+                  ₵{selectedSlotForBooking.feeGhs || 30} GHS (Ghana Cedis)
                 </span>
               </div>
             </div>

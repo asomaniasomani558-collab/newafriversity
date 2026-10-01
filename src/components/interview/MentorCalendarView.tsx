@@ -60,7 +60,7 @@ export const MentorCalendarView: React.FC<MentorCalendarViewProps> = ({ onLaunch
   const [newSlotStartTime, setNewSlotStartTime] = useState('16:00');
   const [newSlotDuration, setNewSlotDuration] = useState<number>(45);
   const [newSlotType, setNewSlotType] = useState<'technical' | 'behavioral' | 'scholarship' | 'leadership'>('technical');
-  const [newSlotFee, setNewSlotFee] = useState<number>(25);
+  const [newSlotFee, setNewSlotFee] = useState<number>(30);
   const [notificationMsg, setNotificationMsg] = useState<string | null>(null);
 
   // Calculate End Time automatically based on duration
@@ -87,11 +87,12 @@ export const MentorCalendarView: React.FC<MentorCalendarViewProps> = ({ onLaunch
       endTime,
       durationMinutes: newSlotDuration,
       interviewType: newSlotType,
-      feeUsd: newSlotFee
+      feeUsd: 2.5,
+      feeGhs: newSlotFee || 30
     });
 
     setIsAddModalOpen(false);
-    setNotificationMsg(`Available time slot on ${newSlotDate} at ${newSlotStartTime} GMT published successfully!`);
+    setNotificationMsg(`Available time slot on ${newSlotDate} at ${newSlotStartTime} GMT (₵${newSlotFee || 30} GHS) published successfully!`);
     setTimeout(() => setNotificationMsg(null), 4000);
   };
 
@@ -108,10 +109,11 @@ export const MentorCalendarView: React.FC<MentorCalendarViewProps> = ({ onLaunch
         endTime: '15:45',
         durationMinutes: 45,
         interviewType: 'technical',
-        feeUsd: 25
+        feeUsd: 2.5,
+        feeGhs: 30
       });
     });
-    setNotificationMsg('3 new live interview slots for next week added to your calendar!');
+    setNotificationMsg('3 new live interview slots (₵30 GHS) for next week added to your calendar!');
     setTimeout(() => setNotificationMsg(null), 4000);
   };
 
@@ -119,9 +121,9 @@ export const MentorCalendarView: React.FC<MentorCalendarViewProps> = ({ onLaunch
   const availableSlotsCount = mySlots.filter(s => s.status === 'available').length;
   const bookedSlotsCount = mySlots.filter(s => s.status === 'booked').length;
   const completedSlotsCount = mySlots.filter(s => s.status === 'completed').length;
-  const totalEarnedUsd = mySlots
+  const totalEarnedGhs = mySlots
     .filter(s => s.status === 'booked' || s.status === 'completed')
-    .reduce((sum, s) => sum + (s.feeUsd || 25), 0);
+    .reduce((sum, s) => sum + (s.feeGhs || 30), 0);
 
   // Month Calendar Grid generation
   const year = currentDate.getFullYear();
@@ -226,8 +228,8 @@ export const MentorCalendarView: React.FC<MentorCalendarViewProps> = ({ onLaunch
 
           <div className="p-3 rounded-lg bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/60">
             <div className="text-[10px] font-mono uppercase tracking-wider text-amber-700 dark:text-amber-400">Advisory Revenue</div>
-            <div className="text-xl font-bold font-mono text-amber-800 dark:text-amber-300 mt-0.5">${totalEarnedUsd}</div>
-            <div className="text-[11px] text-amber-600 dark:text-amber-400">From {bookedSlotsCount + completedSlotsCount} bookings ($25/session)</div>
+            <div className="text-xl font-bold font-mono text-amber-800 dark:text-amber-300 mt-0.5">₵{totalEarnedGhs} GHS</div>
+            <div className="text-[11px] text-amber-600 dark:text-amber-400">From {bookedSlotsCount + completedSlotsCount} bookings (₵30 GHS/session)</div>
           </div>
         </div>
       </div>
@@ -448,7 +450,7 @@ export const MentorCalendarView: React.FC<MentorCalendarViewProps> = ({ onLaunch
                           <span>·</span>
                           <span>{slot.durationMinutes} mins</span>
                           <span>·</span>
-                          <span className="font-mono font-bold text-stone-700 dark:text-stone-300">${slot.feeUsd || 25}</span>
+                          <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">₵{slot.feeGhs || 30} GHS</span>
                         </div>
                       </div>
 
@@ -643,14 +645,14 @@ export const MentorCalendarView: React.FC<MentorCalendarViewProps> = ({ onLaunch
 
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
-                    Session Fee (USD)
+                    Session Fee (₵ GHS)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-stone-400 font-mono">$</span>
+                    <span className="absolute left-3 top-2.5 text-stone-400 font-mono font-bold">₵</span>
                     <input
                       type="number"
                       min={0}
-                      max={100}
+                      max={500}
                       value={newSlotFee}
                       onChange={e => setNewSlotFee(Number(e.target.value))}
                       className="w-full pl-7 p-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg text-stone-900 dark:text-white font-mono"

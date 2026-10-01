@@ -87,16 +87,16 @@ export const MentorProfileDeskView: React.FC = () => {
     return menteeReviews.filter(r => r.status === 'endorsed').length;
   }, [menteeReviews]);
 
-  // Real Faculty Earnings from platform ledger transactions
-  const facultyEarnings = useMemo(() => {
-    // 70% share of interview bookings and advisory reviews
+  // Real Faculty Earnings in GHS from platform ledger transactions
+  const facultyEarningsGhs = useMemo(() => {
+    // 70% share of interview bookings (30 GHS) and advisory reviews
     const interviewSum = transactions
       .filter(t => t.type === 'interview_booking' && t.status === 'completed')
-      .reduce((sum, t) => sum + t.amountUsd * 0.7, 0);
+      .reduce((sum, t) => sum + (t.amountGhs || 30) * 0.7, 0);
 
     const reviewSum = transactions
       .filter(t => t.type === 'advisory_review' && t.status === 'completed')
-      .reduce((sum, t) => sum + t.amountUsd * 0.7, 0);
+      .reduce((sum, t) => sum + (t.amountGhs || 180) * 0.7, 0);
 
     return Math.round(interviewSum + reviewSum);
   }, [transactions]);
@@ -116,7 +116,7 @@ export const MentorProfileDeskView: React.FC = () => {
   );
   const [yearsExperience, setYearsExperience] = useState('10');
   const [menteeCapacity, setMenteeCapacity] = useState('6');
-  const [bookingFee, setBookingFee] = useState('25');
+  const [bookingFee, setBookingFee] = useState('30');
   const [availabilityWindow, setAvailabilityWindow] = useState(
     'Thursday & Friday 15:30 - 18:00 GMT, Saturday 10:00 - 14:00 GMT'
   );
@@ -265,7 +265,7 @@ export const MentorProfileDeskView: React.FC = () => {
           <div className="p-3 bg-stone-50 dark:bg-stone-850 rounded-lg border border-stone-200 dark:border-stone-750">
             <div className="text-[10px] font-mono uppercase text-stone-500 dark:text-stone-400">Faculty Payouts (70%)</div>
             <div className="text-xl sm:text-2xl font-bold font-mono text-stone-900 dark:text-white mt-0.5">
-              ${facultyEarnings} USD
+              ₵{facultyEarningsGhs.toLocaleString()} GHS
             </div>
             <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Live ledger verified</div>
           </div>
@@ -319,13 +319,13 @@ export const MentorProfileDeskView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1.5">
-                Primary University / Institution
+                Primary Organization / Institution
               </label>
               <input
                 type="text"
                 value={institution}
                 onChange={e => setInstitution(e.target.value)}
-                placeholder="e.g., Ashesi University / University of Ghana / KNUST"
+                placeholder="e.g., Academic Institution / Research Center / Foundation"
                 required
                 className="w-full text-xs p-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg text-stone-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
@@ -347,13 +347,13 @@ export const MentorProfileDeskView: React.FC = () => {
 
             <div>
               <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1.5">
-                Highest Degree & Alma Mater
+                Highest Academic Degree
               </label>
               <input
                 type="text"
                 value={academicDegree}
                 onChange={e => setAcademicDegree(e.target.value)}
-                placeholder="e.g., PhD Computer Science (University of Cambridge)"
+                placeholder="e.g., PhD in Computer Science / MSc in Engineering"
                 required
                 className="w-full text-xs p-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg text-stone-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
@@ -534,21 +534,21 @@ export const MentorProfileDeskView: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1.5">
-                  Standard 45-Min Mock Interview Booking Fee (USD)
+                  Standard 45-Min Mock Interview Booking Fee (₵ GHS)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-stone-400 text-xs font-mono">$</span>
+                  <span className="absolute left-3 top-2.5 text-stone-400 text-xs font-mono font-bold">₵</span>
                   <input
                     type="number"
                     min="0"
-                    max="150"
+                    max="1000"
                     value={bookingFee}
                     onChange={e => setBookingFee(e.target.value)}
                     className="w-full text-xs pl-7 pr-3 py-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg text-stone-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono"
                   />
                 </div>
                 <p className="text-[10px] text-stone-400 mt-1">
-                  You receive 70% ($17.50) disbursed directly to your mobile money or bank account.
+                  You receive 70% (₵{Math.round(Number(bookingFee || 30) * 0.7)} GHS) disbursed directly to your MTN Mobile Money, Telecel Cash, or bank account.
                 </p>
               </div>
 
@@ -595,7 +595,7 @@ export const MentorProfileDeskView: React.FC = () => {
             <div>
               <span className="font-bold">Faculty Zero-Fabrication Pledge Signed:</span>
               <p className="text-[11px] text-emerald-800 dark:text-emerald-400 mt-0.5">
-                You have officially pledged to evaluate student accomplishments with strict academic integrity, upholding anti-fabrication standards across all African university and scholarship reviews.
+                You have officially pledged to evaluate student accomplishments with strict academic integrity, upholding anti-fabrication standards across all academic and scholarship advisory reviews.
               </p>
             </div>
           </div>
@@ -655,15 +655,15 @@ export const MentorProfileDeskView: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setActiveTab('discover')}
+            onClick={() => setActiveTab('tracker')}
             className="p-3.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-750 hover:border-amber-400 rounded-lg text-left transition-colors cursor-pointer group shadow-2xs"
           >
             <div className="flex items-center justify-between text-xs font-bold text-stone-900 dark:text-white">
-              <span>Verified Opportunity Catalog</span>
+              <span>Mentee Review & Endorsement Queue</span>
               <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-amber-600 transition-colors" />
             </div>
             <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
-              Explore verified scholarships, internships, and fellowships to recommend to mentees.
+              Track student document submissions, evaluation scores, and signed endorsements.
             </p>
           </button>
         </div>

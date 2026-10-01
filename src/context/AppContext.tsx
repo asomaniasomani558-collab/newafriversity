@@ -318,7 +318,8 @@ const INITIAL_TIME_SLOTS: MentorTimeSlot[] = [
     durationMinutes: 45,
     interviewType: 'technical',
     status: 'booked',
-    feeUsd: 25,
+    feeUsd: 2.5,
+    feeGhs: 30,
     bookedByStudentId: 'usr-shs-1',
     bookedByStudentName: 'Victoria Mensah',
     bookedByStudentEmail: 'victoria.mensah@gmail.com',
@@ -338,7 +339,8 @@ const INITIAL_TIME_SLOTS: MentorTimeSlot[] = [
     durationMinutes: 30,
     interviewType: 'behavioral',
     status: 'booked',
-    feeUsd: 25,
+    feeUsd: 2.5,
+    feeGhs: 30,
     bookedByStudentId: 'usr-student-2',
     bookedByStudentName: 'Kwame Asante',
     bookedByStudentEmail: 'kwame.asante@st.knust.edu.gh',
@@ -358,7 +360,8 @@ const INITIAL_TIME_SLOTS: MentorTimeSlot[] = [
     durationMinutes: 45,
     interviewType: 'technical',
     status: 'available',
-    feeUsd: 25,
+    feeUsd: 2.5,
+    feeGhs: 30,
     meetingLink: 'https://meet.afriversity.org/live/slot-3',
     createdAt: '2026-09-29T09:00:00Z'
   },
@@ -373,7 +376,8 @@ const INITIAL_TIME_SLOTS: MentorTimeSlot[] = [
     durationMinutes: 45,
     interviewType: 'scholarship',
     status: 'available',
-    feeUsd: 25,
+    feeUsd: 2.5,
+    feeGhs: 30,
     meetingLink: 'https://meet.afriversity.org/live/slot-4',
     createdAt: '2026-09-29T09:00:00Z'
   },
@@ -388,7 +392,8 @@ const INITIAL_TIME_SLOTS: MentorTimeSlot[] = [
     durationMinutes: 45,
     interviewType: 'behavioral',
     status: 'available',
-    feeUsd: 25,
+    feeUsd: 2.5,
+    feeGhs: 30,
     meetingLink: 'https://meet.afriversity.org/live/slot-5',
     createdAt: '2026-09-29T10:00:00Z'
   },
@@ -403,7 +408,8 @@ const INITIAL_TIME_SLOTS: MentorTimeSlot[] = [
     durationMinutes: 45,
     interviewType: 'technical',
     status: 'available',
-    feeUsd: 25,
+    feeUsd: 2.5,
+    feeGhs: 30,
     meetingLink: 'https://meet.afriversity.org/live/slot-6',
     createdAt: '2026-09-29T10:00:00Z'
   }
@@ -414,22 +420,24 @@ const INITIAL_TRANSACTIONS: PlatformTransaction[] = [
     id: 'txn-1',
     date: '2026-09-28 14:30',
     type: 'interview_booking',
-    amountUsd: 25,
+    amountUsd: 2.5,
+    amountGhs: 30,
     status: 'completed',
     payerName: 'Victoria Mensah',
     payerEmail: 'victoria.mensah@gmail.com',
-    description: 'Live 1-on-1 Mock Interview Booking (Google SWE Intern)',
+    description: 'Live 1-on-1 Mock Interview Booking (₵30 GHS - Google SWE Intern)',
     referenceId: 'slot-1'
   },
   {
     id: 'txn-2',
     date: '2026-09-28 15:00',
     type: 'interview_booking',
-    amountUsd: 25,
+    amountUsd: 2.5,
+    amountGhs: 30,
     status: 'completed',
     payerName: 'Kwame Asante',
     payerEmail: 'kwame.asante@st.knust.edu.gh',
-    description: 'Live 1-on-1 Mock Interview Booking (MTN Pulse)',
+    description: 'Live 1-on-1 Mock Interview Booking (₵30 GHS - MTN Pulse)',
     referenceId: 'slot-2'
   },
   {
@@ -568,7 +576,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   // Admin Portal Sub-tab State
-  const [adminActiveTab, setAdminActiveTab] = useState<AdminActiveTab>('dashboard');
+  const [adminActiveTab, setAdminActiveTab] = useState<AdminActiveTab>('overview');
 
   // Mentor Onboarding Modal State
   const [isMentorOnboardingOpen, setIsMentorOnboardingOpen] = useState(false);
@@ -704,7 +712,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...slotData,
       id: `slot-${Date.now()}`,
       status: 'available',
-      feeUsd: slotData.feeUsd || 25,
+      feeUsd: slotData.feeUsd || 2.5,
+      feeGhs: slotData.feeGhs || 30,
       createdAt: new Date().toISOString()
     };
     setMentorTimeSlots(prev => [newSlot, ...prev]);
@@ -712,7 +721,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       category: 'user',
       action: 'Mentor Available Slot Published',
       actor: user?.email || 'mentor@afriversity.org',
-      details: `${slotData.mentorName} published available slot on ${slotData.date} at ${slotData.startTime} GMT.`,
+      details: `${slotData.mentorName} published available slot on ${slotData.date} at ${slotData.startTime} GMT (Fee: ₵${newSlot.feeGhs} GHS).`,
       severity: 'info'
     });
   };
@@ -735,6 +744,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!slot) return;
 
     const meetingLink = `https://meet.afriversity.org/live/${slot.id}`;
+    const feeGhs = slot.feeGhs || 30;
+    const feeUsd = slot.feeUsd || 2.5;
 
     setMentorTimeSlots(prev =>
       prev.map(s =>
@@ -772,14 +783,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setInterviewRequests(prev => [newInterviewReq, ...prev]);
 
-    // Record real transaction for actual platform revenue
+    // Record real transaction for actual platform revenue (₵30 GHS)
     recordTransaction({
       type: 'interview_booking',
-      amountUsd: slot.feeUsd || 25,
+      amountUsd: feeUsd,
+      amountGhs: feeGhs,
       status: 'completed',
       payerName: bookingDetails.studentName,
       payerEmail: bookingDetails.studentEmail,
-      description: `Live 1-on-1 Mock Interview Slot Booking (${bookingDetails.targetOpportunity})`,
+      description: `Live 1-on-1 Mock Interview Slot Booking (₵${feeGhs} GHS - ${bookingDetails.targetOpportunity})`,
       referenceId: slot.id
     });
 
@@ -787,7 +799,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const notif: NotificationItem = {
       id: `notif-${Date.now()}`,
       title: 'Mock Interview Slot Booked',
-      message: `${bookingDetails.studentName} booked your live interview slot on ${slot.date} at ${slot.startTime} GMT.`,
+      message: `${bookingDetails.studentName} booked your live interview slot on ${slot.date} at ${slot.startTime} GMT (₵${feeGhs} GHS).`,
       type: 'match',
       date: 'Just now',
       read: false
@@ -798,7 +810,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       category: 'user',
       action: 'Mock Interview Slot Booked',
       actor: bookingDetails.studentEmail,
-      details: `${bookingDetails.studentName} booked slot with ${slot.mentorName} on ${slot.date} at ${slot.startTime} GMT for $${slot.feeUsd || 25}.`,
+      details: `${bookingDetails.studentName} booked slot with ${slot.mentorName} on ${slot.date} at ${slot.startTime} GMT for ₵${feeGhs} GHS.`,
       severity: 'success'
     });
   };

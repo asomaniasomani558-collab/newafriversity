@@ -20,7 +20,8 @@ import {
   BarChart3,
   KeyRound,
   Lock,
-  Video
+  Video,
+  Wallet
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { AdminActiveTab } from '../../types';
@@ -54,11 +55,18 @@ export const Sidebar: React.FC = () => {
   // 1. ADMIN NAVIGATION ITEMS (100% Admin Related)
   const adminNavItems = [
     {
+      id: 'admin-overview',
+      adminTabId: 'overview' as AdminActiveTab,
+      label: 'Overview Dashboard',
+      icon: LayoutDashboard,
+      badge: 'Real-Time'
+    },
+    {
       id: 'admin-dashboard',
       adminTabId: 'dashboard' as AdminActiveTab,
-      label: 'Executive Overview',
-      icon: LayoutDashboard,
-      badge: 'Live'
+      label: 'Executive Earnings',
+      icon: Wallet,
+      badge: 'Ledger'
     },
     {
       id: 'admin-users',
@@ -97,7 +105,7 @@ export const Sidebar: React.FC = () => {
     }
   ];
 
-  // 2. MENTOR NAVIGATION ITEMS (University programs & Mentorship hub removed as requested)
+  // 2. MENTOR NAVIGATION ITEMS (University programs & Opportunity catalog removed as requested)
   const mentorNavItems = [
     {
       id: 'dashboard',
@@ -110,12 +118,6 @@ export const Sidebar: React.FC = () => {
       label: 'Mentee Review Queue',
       icon: Kanban,
       badge: pendingMentorReviewsCount > 0 ? `${pendingMentorReviewsCount} pending` : '0 pending'
-    },
-    {
-      id: 'discover',
-      label: 'Opportunity Catalog',
-      icon: Compass,
-      badge: 'Verified'
     },
     {
       id: 'cv-assistant',

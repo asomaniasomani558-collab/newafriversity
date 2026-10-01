@@ -345,7 +345,7 @@ export interface MenteeReviewItem {
   priority: 'high' | 'medium' | 'normal';
 }
 
-export type AdminActiveTab = 'dashboard' | 'users' | 'opportunities' | 'analytics' | 'audit' | 'settings';
+export type AdminActiveTab = 'overview' | 'dashboard' | 'users' | 'opportunities' | 'analytics' | 'audit' | 'settings';
 
 export interface InterviewRubricScore {
   situation: number;
@@ -390,6 +390,7 @@ export interface MentorTimeSlot {
   interviewType: 'technical' | 'behavioral' | 'scholarship' | 'leadership';
   status: 'available' | 'booked' | 'completed';
   feeUsd: number;
+  feeGhs?: number; // Standard session fee: 30 GHS
   bookedByStudentId?: string;
   bookedByStudentName?: string;
   bookedByStudentEmail?: string;
@@ -404,6 +405,7 @@ export interface PlatformTransaction {
   date: string;
   type: 'interview_booking' | 'advisory_review' | 'verification_fee' | 'mentor_payout';
   amountUsd: number;
+  amountGhs?: number;
   status: 'completed' | 'pending';
   payerName: string;
   payerEmail: string;

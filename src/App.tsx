@@ -78,12 +78,12 @@ const MainLayout: React.FC = () => {
         <main className="flex-1 min-w-0 py-6 px-4 sm:px-6 lg:px-10 pb-20 md:pb-12 overflow-y-auto">
           <div className="max-w-6xl mx-auto w-full">
             {activeTab === 'dashboard' && <DashboardView />}
-            {activeTab === 'discover' && <OpportunityDiscoveryView />}
+            {activeTab === 'discover' && (user?.role === 'mentor' ? <DashboardView /> : <OpportunityDiscoveryView />)}
             {activeTab === 'tracker' && <ApplicationTrackerView />}
-            {activeTab === 'universities' && <UniversityDiscoveryView />}
+            {activeTab === 'universities' && (user?.role === 'mentor' ? <DashboardView /> : <UniversityDiscoveryView />)}
             {activeTab === 'cv-assistant' && <CvAssistantView />}
             {activeTab === 'interview' && <MockInterviewView />}
-            {activeTab === 'learning' && <LearningHubView />}
+            {activeTab === 'learning' && (user?.role === 'mentor' ? <DashboardView /> : <LearningHubView />)}
             {activeTab === 'profile' && <MyAfriversityView />}
             {activeTab === 'admin' && (user?.role === 'admin' ? <AdminPortalView /> : <DashboardView />)}
           </div>
@@ -92,13 +92,28 @@ const MainLayout: React.FC = () => {
 
       {/* Mobile Bottom Navigation Bar */}
       <nav className="no-print md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-t border-stone-200 dark:border-stone-800 py-1.5 px-3 flex items-center justify-around">
-        {[
-          { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-          { id: 'discover', label: 'Discover', icon: Compass },
-          { id: 'interview', label: 'Interview', icon: Mic },
-          { id: 'tracker', label: 'Tracker', icon: Kanban },
-          { id: 'profile', label: 'Profile', icon: UserCheck }
-        ].map(item => {
+        {(user?.role === 'mentor'
+          ? [
+              { id: 'dashboard', label: 'Advisory', icon: LayoutDashboard },
+              { id: 'tracker', label: 'Queue', icon: Kanban },
+              { id: 'cv-assistant', label: 'CV Desk', icon: FileText },
+              { id: 'interview', label: 'Interviews', icon: Mic },
+              { id: 'profile', label: 'Profile', icon: UserCheck }
+            ]
+          : user?.role === 'admin'
+          ? [
+              { id: 'admin', label: 'Admin', icon: LayoutDashboard },
+              { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+              { id: 'profile', label: 'Profile', icon: UserCheck }
+            ]
+          : [
+              { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+              { id: 'discover', label: 'Discover', icon: Compass },
+              { id: 'interview', label: 'Interview', icon: Mic },
+              { id: 'tracker', label: 'Tracker', icon: Kanban },
+              { id: 'profile', label: 'Profile', icon: UserCheck }
+            ]
+        ).map(item => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (

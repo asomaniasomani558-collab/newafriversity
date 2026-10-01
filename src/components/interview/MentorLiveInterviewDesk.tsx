@@ -123,8 +123,8 @@ export const MentorLiveInterviewDesk: React.FC = () => {
           hint: 'Listen for: Accountability, resilience, data-driven course correction, and measurable impact.'
         },
         {
-          q: 'How do your experiences at your university prepare you for this specific opportunity?',
-          hint: 'Listen for: Concrete course projects, leadership roles, and proactive self-learning.'
+          q: 'How do your academic projects and practical experiences prepare you for this specific opportunity?',
+          hint: 'Listen for: Concrete technical projects, leadership roles, and proactive problem solving.'
         },
         {
           q: 'Do you have any technical or strategic questions for me as your faculty mentor regarding this application?',
