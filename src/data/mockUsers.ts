@@ -37,6 +37,157 @@ export const INITIAL_PLATFORM_USERS: UserProfile[] = [
     }
   },
   {
+    id: 'usr-shs-general-arts',
+    fullName: 'Ama Serwaa Osei',
+    email: 'ama.osei@achimota.edu.gh',
+    role: 'student',
+    status: 'active',
+    isVerified: true,
+    country: 'Ghana',
+    city: 'Accra',
+    academicLevel: 'secondary',
+    institution: 'Achimota Senior High School',
+    programme: 'General Arts (Literature in English, Government, History, Economics, French)',
+    graduationYear: 2026,
+    gradeGpa: 'WASSCE Candidate / Grade A Standing (Aggregate 07)',
+    relevantSubjects: [
+      'Literature in English',
+      'Government',
+      'History',
+      'Economics',
+      'French',
+      'Core Mathematics',
+      'English Language',
+      'Social Studies'
+    ],
+    interests: [
+      'Constitutional Law',
+      'African Literature',
+      'Governance & Public Policy',
+      'Debating',
+      'Creative Writing'
+    ],
+    skills: [
+      'Critical Thinking',
+      'Analytical Essay Writing',
+      'Debating & Public Speaking',
+      'Literary Criticism',
+      'Historical Research',
+      'French Communication'
+    ],
+    goals: [
+      'Mastercard Foundation Scholarship in Arts at Ashesi',
+      'African Leadership Academy Pre-University Diploma',
+      'Direct Admission into University of Ghana Faculty of Law & College of Humanities',
+      'African Union Youth Governance Essay Fellowship'
+    ],
+    projects: [
+      {
+        id: 'p-arts-1',
+        title: 'Achimota Model African Union & Mock Parliament',
+        role: 'President & Chief Delegate',
+        description: 'Drafted resolution on intra-African youth trade and human rights protections; awarded Best High School Delegate.'
+      },
+      {
+        id: 'p-arts-2',
+        title: 'Inter-Collegiate Literary Critique & Essay Digest',
+        role: 'Chief Editor',
+        description: 'Published comparative essays analyzing Chinua Achebe and Ama Ata Aidoo literature across 3 secondary schools.'
+      }
+    ],
+    preferences: {
+      targetCountries: ['Ghana', 'South Africa', 'United Kingdom', 'Pan-Africa'],
+      fundingTypes: ['Fully Funded', 'Tuition Waiver'],
+      remoteOnly: false,
+      opportunityTypes: ['scholarship', 'admission', 'fellowship', 'competition']
+    },
+    profileCompleteness: 95,
+    currentPriority: 'Prepare for WASSCE General Arts electives and finalize leadership statement for Ashesi Arts Scholarship & ALA Diploma',
+    notificationSettings: {
+      opportunityAlerts: true,
+      deadlineReminders: true,
+      universityUpdates: true,
+      weeklyDigest: true,
+      whatsappAlerts: false
+    }
+  },
+  {
+    id: 'usr-ug-dance-drama',
+    fullName: 'Kofi Mensah Boateng',
+    email: 'kofi.mensah@st.ug.edu.gh',
+    role: 'student',
+    status: 'active',
+    isVerified: true,
+    country: 'Ghana',
+    city: 'Accra',
+    academicLevel: 'undergraduate',
+    institution: 'University of Ghana (School of Performing Arts, Legon)',
+    programme: 'BFA Dance and Drama (Theatre Arts & Choreography)',
+    graduationYear: 2027,
+    gradeGpa: '3.78 / 4.0 (First Class Honours)',
+    relevantSubjects: [
+      'African Dance Forms & Rhythms',
+      'Dramatic Script Analysis',
+      'Choreography & Movement',
+      'Stage Acting & Directing',
+      'Theatre for Development',
+      'Voice & Speech',
+      'Contemporary Physical Theatre'
+    ],
+    interests: [
+      'African Contemporary Dance',
+      'Physical Theatre',
+      'Stage Acting',
+      'Film & Drama Production',
+      'Choreographic Composition',
+      'Cultural Heritage'
+    ],
+    skills: [
+      'Traditional African Dance',
+      'Stage Acting',
+      'Voice Projection & Diction',
+      'Choreographic Composition',
+      'Physical Theatre',
+      'Script Interpretation',
+      'Movement Improvisation'
+    ],
+    goals: [
+      'National Theatre of Ghana Resident Performing Artists Fellowship',
+      'MultiChoice Talent Factory West Africa Film & Drama Academy',
+      'UNESCO African Cultural Heritage Performing Arts Residency Grant',
+      'Juilliard Global African Performing Arts Fellowship'
+    ],
+    projects: [
+      {
+        id: 'p-dance-1',
+        title: 'Ananse & The River of Masks (Original Dance-Drama)',
+        role: 'Lead Actor & Co-Choreographer',
+        description: 'Performed in the Legon Drama Studio for an audience of 600 patrons; fused traditional Ga rhythms with contemporary drama.'
+      },
+      {
+        id: 'p-dance-2',
+        title: 'Community Theatre for Development (TFD) Health Campaign',
+        role: 'Drama Director',
+        description: 'Produced educational street theatre performances in rural Central Region communities on preventive maternal healthcare.'
+      }
+    ],
+    preferences: {
+      targetCountries: ['Ghana', 'Nigeria', 'Senegal', 'United States', 'Pan-Africa'],
+      fundingTypes: ['Fully Funded', 'Paid'],
+      remoteOnly: false,
+      opportunityTypes: ['fellowship', 'grant', 'training', 'internship']
+    },
+    profileCompleteness: 95,
+    currentPriority: 'Finalize 2-minute theatrical monologue audition reel and submit application packet to National Theatre Resident Troupe & MTF Drama Academy',
+    notificationSettings: {
+      opportunityAlerts: true,
+      deadlineReminders: true,
+      universityUpdates: true,
+      weeklyDigest: true,
+      whatsappAlerts: true
+    }
+  },
+  {
     id: 'usr-shs-1',
     fullName: 'Victoria Mensah',
     email: 'victoria.mensah@gmail.com',

@@ -68,6 +68,9 @@ export const AuthPage: React.FC = () => {
     error?: string;
     devCode?: string;
     message?: string;
+    note?: string;
+    recipient?: string;
+    details?: string;
   } | null>(null);
 
   // Multi-step Forgot Password with Email OTP Verification state
@@ -161,14 +164,16 @@ export const AuthPage: React.FC = () => {
   };
 
   const sendEmailOtp = async (targetEmail: string, code: string, recipientName?: string, userRole?: string) => {
+    const cleanTargetEmail = (targetEmail || '').trim().toLowerCase();
     setEmailDispatching(true);
     setEmailDispatchResult(null);
     try {
+      console.log(`[AuthPage] Requesting real OTP dispatch for dynamic recipient: "${cleanTargetEmail}"`);
       const resp = await fetch('/api/auth/send-verification-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: targetEmail,
+          email: cleanTargetEmail,
           otp: code,
           fullName: recipientName,
           role: userRole
@@ -180,8 +185,7 @@ export const AuthPage: React.FC = () => {
       console.warn('Email dispatch call error:', err);
       setEmailDispatchResult({
         delivered: false,
-        error: 'Network error calling email verification service.',
-        devCode: code
+        error: 'Network error calling email verification service.'
       });
     } finally {
       setEmailDispatching(false);
@@ -310,6 +314,12 @@ export const AuthPage: React.FC = () => {
     } else if (authMode === 'register') {
       if (!fullName.trim() || !cleanEmail || !password.trim() || !institution.trim()) {
         setFormError('Please complete all required fields.');
+        return;
+      }
+
+      const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!EMAIL_REGEX.test(cleanEmail)) {
+        setFormError('Please enter a valid email address (e.g. yourname@gmail.com).');
         return;
       }
 
@@ -453,6 +463,12 @@ export const AuthPage: React.FC = () => {
     } else if (authMode === 'register') {
       if (!fullName.trim() || !cleanEmail || !password.trim() || !mentorOrganization.trim()) {
         setFormError('Please provide your name, official email, and organizational affiliation.');
+        return;
+      }
+
+      const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!EMAIL_REGEX.test(cleanEmail)) {
+        setFormError('Please enter a valid email address (e.g. yourname@organization.org or gmail.com).');
         return;
       }
 
@@ -976,19 +992,27 @@ export const AuthPage: React.FC = () => {
                       </p>
                     </div>
                   ) : (
-                    <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 space-y-2 animate-in fade-in">
+                    <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 space-y-2.5 animate-in fade-in">
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-200">
                           <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                          <span>Verification Code Dispatched Directly to Your Email</span>
+                          <span>Verification Code Dispatched to Your Email</span>
                         </span>
                         <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-mono font-bold px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
                           Dispatched
                         </span>
                       </div>
                       <p className="text-xs text-stone-700 dark:text-stone-300 leading-relaxed">
-                        A 6-digit one-time verification code has been dispatched directly to your inbox at <strong>{pendingAccount?.email}</strong>. Please check your email inbox (and spam/junk folder) and enter the code below to complete authentication.
+                        A 6-digit one-time verification code has been dispatched directly to your inbox at <strong>{pendingAccount?.email}</strong>.
                       </p>
+                      <div className="p-2.5 rounded-lg bg-amber-100/80 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-800 text-[11px] text-amber-950 dark:text-amber-200 leading-relaxed space-y-1">
+                        <div className="font-semibold flex items-center gap-1.5 text-amber-900 dark:text-amber-300">
+                          <span>📬 Check Your Spam / Junk Folder & Updates Tab</span>
+                        </div>
+                        <p className="text-[11px] text-stone-600 dark:text-stone-300">
+                          If the email is not in your primary inbox, please check your <strong>Spam</strong> or <strong>Junk</strong> folder, or search for <strong>Afriversity</strong> in your email search bar.
+                        </p>
+                      </div>
                       <div className="flex items-center gap-1.5 pt-1 text-[11px] text-stone-500 dark:text-stone-400 border-t border-amber-200/60 dark:border-amber-900/40">
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         <span>For strict security, verification codes are sent directly to your email inbox and never displayed on this website.</span>
@@ -1112,25 +1136,45 @@ export const AuthPage: React.FC = () => {
 
                   {forgotStep === 'otp' && (
                     <form onSubmit={handleVerifyResetOtp} className="space-y-5">
-                      {/* Email Dispatch Notification Banner (Code sent directly to user's email, not displayed on site) */}
-                      <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-200">
-                            <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                            <span>Password Reset Code Sent to Email</span>
-                          </span>
-                          <span className="text-[10px] bg-amber-200/70 dark:bg-amber-900/60 px-2 py-0.5 rounded font-mono font-bold text-amber-900 dark:text-amber-200">
-                            Dispatched
-                          </span>
+                      {/* Email Dispatch Notification Banner for Password Reset */}
+                      {emailDispatching ? (
+                        <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-200">
+                            <RefreshCw className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-spin" />
+                            <span>Dispatching Password Reset Code...</span>
+                          </div>
+                          <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                            Connecting to email service for <strong>{resetEmail}</strong>.
+                          </p>
                         </div>
-                        <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                          A secure 6-digit password reset verification code has been dispatched directly to <strong>{resetEmail}</strong>. Please check your inbox (including spam/junk folder) and enter the code below to reset your password.
-                        </p>
-                        <div className="flex items-center gap-1.5 pt-1 text-[11px] text-stone-500 dark:text-stone-400 border-t border-amber-200/60 dark:border-amber-900/40">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>For security reasons, verification codes are sent directly to your email and never displayed on this page.</span>
+                      ) : (
+                        <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-200">
+                              <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                              <span>Password Reset Code Sent to Email</span>
+                            </span>
+                            <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-mono font-bold px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
+                              Dispatched
+                            </span>
+                          </div>
+                          <p className="text-xs text-stone-700 dark:text-stone-300 leading-relaxed">
+                            A secure 6-digit password reset verification code has been dispatched directly to <strong>{resetEmail}</strong>.
+                          </p>
+                          <div className="p-2.5 rounded-lg bg-amber-100/80 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-800 text-[11px] text-amber-950 dark:text-amber-200 leading-relaxed space-y-1">
+                            <div className="font-semibold flex items-center gap-1.5 text-amber-900 dark:text-amber-300">
+                              <span>📬 Check Your Spam / Junk Folder & Updates Tab</span>
+                            </div>
+                            <p className="text-[11px] text-stone-600 dark:text-stone-300">
+                              If the email is not in your primary inbox, please check your <strong>Spam</strong> or <strong>Junk</strong> folder, or search for <strong>Afriversity</strong> in your email search bar.
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 pt-1 text-[11px] text-stone-500 dark:text-stone-400 border-t border-amber-200/60 dark:border-amber-900/40">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>For security reasons, verification codes are sent directly to your email and never displayed on this page.</span>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {resetError && (
                         <div className="p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 rounded-md text-xs text-red-700 dark:text-red-300 font-medium">

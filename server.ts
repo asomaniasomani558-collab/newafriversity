@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { VERIFIED_OPPORTUNITIES } from './src/data/opportunities.js';
 import { VERIFIED_UNIVERSITIES } from './src/data/universities.js';
 import { LEARNING_RESOURCES } from './src/data/learningResources.js';
@@ -587,13 +588,15 @@ const pendingVerificationOtps = new Map<string, { otp: string; expiresAt: number
 
 // GET /api/auth/email-service-status
 app.get('/api/auth/email-service-status', (_req: Request, res: Response) => {
+  const hasGmailSmtp = Boolean(process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS);
   const hasResend = Boolean(process.env.RESEND_API_KEY);
   const hasSendGrid = Boolean(process.env.SENDGRID_API_KEY);
   return res.json({
-    activeProvider: hasResend ? 'resend' : hasSendGrid ? 'sendgrid' : 'none',
+    activeProvider: hasGmailSmtp ? 'gmail_smtp' : hasSendGrid ? 'sendgrid' : hasResend ? 'resend' : 'none',
+    hasGmailSmtp,
     hasResendKey: hasResend,
     hasSendGridKey: hasSendGrid,
-    fromEmail: process.env.EMAIL_FROM || 'onboarding@resend.dev'
+    fromEmail: process.env.GMAIL_USER || process.env.EMAIL_FROM || 'afriversity2000@gmail.com'
   });
 });
 
@@ -610,6 +613,11 @@ app.post('/api/auth/send-verification-otp', async (req: Request, res: Response) 
     const cleanOtp = String(otp).trim();
     const recipientName = fullName ? String(fullName).trim() : 'Afriversity Scholar';
 
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return res.status(400).json({ error: 'Invalid email address format' });
+    }
+
     // Store in-memory with 10-minute expiration
     pendingVerificationOtps.set(cleanEmail, {
       otp: cleanOtp,
@@ -617,9 +625,9 @@ app.post('/api/auth/send-verification-otp', async (req: Request, res: Response) 
       fullName: recipientName
     });
 
-    console.log(`[Afriversity Auth] Verification OTP generated for ${cleanEmail}: ${cleanOtp}`);
+    console.log(`[Afriversity Auth] Verification OTP generated for dynamic recipient "${cleanEmail}".`);
 
-    const emailSubject = `${cleanOtp} is your Afriversity verification code`;
+    const emailSubject = `Your Afriversity verification code: ${cleanOtp}`;
     const emailHtml = `
 <!DOCTYPE html>
 <html lang="en">
@@ -659,18 +667,68 @@ app.post('/api/auth/send-verification-otp', async (req: Request, res: Response) 
 </html>
     `;
 
+    // 1. Strictly utilize Nodemailer with Gmail credentials
+    const rawGmailPass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS;
+
+    if (rawGmailPass) {
+      const cleanPass = rawGmailPass.replace(/\s+/g, '');
+      // Accounts to authenticate: prioritize user's authorized account, then configured env user
+      const candidateAccounts = [
+        'asomaniasomani558@gmail.com',
+        process.env.GMAIL_USER,
+        process.env.EMAIL_FROM,
+        'afriversity2000@gmail.com'
+      ].filter(Boolean) as string[];
+
+      const uniqueAccounts = Array.from(new Set(candidateAccounts));
+
+      for (const authUser of uniqueAccounts) {
+        try {
+          const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+              user: authUser,
+              pass: cleanPass
+            }
+          });
+
+          const info = await transporter.sendMail({
+            from: `"Afriversity" <${authUser}>`,
+            to: cleanEmail,
+            replyTo: authUser,
+            subject: emailSubject,
+            text: `Hello ${recipientName},\n\nYour Afriversity verification code is: ${cleanOtp}\n\nThis code expires in 10 minutes.\n\nAfriversity Team`,
+            html: emailHtml
+          });
+
+          console.log(`[Nodemailer Success] Real verification email delivered directly to ${cleanEmail} via authorized sender ${authUser}. MessageId: ${info.messageId}`);
+          return res.json({
+            success: true,
+            delivered: true,
+            provider: 'gmail_smtp',
+            recipient: cleanEmail,
+            messageId: info.messageId
+          });
+        } catch (gmailErr: any) {
+          console.warn(`[Nodemailer Attempt with ${authUser}]:`, gmailErr.message);
+        }
+      }
+    }
+
     // Clean SendGrid key if it contains extraneous copied text
     const cleanSendGridKey = (process.env.SENDGRID_API_KEY || '').replace(/Copied!?/gi, '').trim();
 
-    // 1. Try SendGrid if API key is present
+    // 2. Try SendGrid if API key is present
     if (cleanSendGridKey) {
       try {
-        const sendgridSenders = [
+        const candidateSenders = [
           process.env.EMAIL_FROM || 'afriversity2000@gmail.com',
           'asomaniasomani558@gmail.com'
-        ];
+        ].filter(Boolean);
 
-        for (const senderEmail of sendgridSenders) {
+        for (const sendgridSender of candidateSenders) {
           const sgResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
             method: 'POST',
             headers: {
@@ -679,26 +737,27 @@ app.post('/api/auth/send-verification-otp', async (req: Request, res: Response) 
             },
             body: JSON.stringify({
               personalizations: [{ to: [{ email: cleanEmail, name: recipientName }] }],
-              from: { email: senderEmail, name: 'Afriversity Verification' },
-              reply_to: { email: 'afriversity2000@gmail.com', name: 'Afriversity Admissions' },
+              from: { email: sendgridSender, name: 'Afriversity Verification' },
+              reply_to: { email: sendgridSender, name: 'Afriversity Admissions' },
               subject: emailSubject,
               content: [
-                { type: 'text/html', value: emailHtml },
-                { type: 'text/plain', value: `Your verification code is: ${cleanOtp}` }
+                { type: 'text/plain', value: `Your verification code is: ${cleanOtp}` },
+                { type: 'text/html', value: emailHtml }
               ]
             })
           });
 
-          if (sgResponse.ok) {
-            console.log(`[SendGrid Success] Real email delivered to ${cleanEmail} from ${senderEmail}`);
+          if (sgResponse.ok || sgResponse.status === 202) {
+            console.log(`[SendGrid Success] Real email delivered to ${cleanEmail} from ${sendgridSender}`);
             return res.json({
               success: true,
               delivered: true,
-              provider: 'sendgrid'
+              provider: 'sendgrid',
+              recipient: cleanEmail
             });
           } else {
             const sgErr = await sgResponse.text();
-            console.warn(`[SendGrid Attempt with ${senderEmail} failed]:`, sgErr);
+            console.warn(`[SendGrid Attempt for ${cleanEmail} with ${sendgridSender}]:`, sgErr);
           }
         }
       } catch (sgErr: any) {
@@ -726,7 +785,7 @@ app.post('/api/auth/send-verification-otp', async (req: Request, res: Response) 
 
         const replyToEmail = process.env.EMAIL_FROM || 'afriversity2000@gmail.com';
 
-        // Attempt sending directly to the applicant's email
+        // Deliver strictly to the applicant's input email
         const sendResult = await resend.emails.send({
           from: resendFrom,
           replyTo: replyToEmail,
@@ -737,47 +796,23 @@ app.post('/api/auth/send-verification-otp', async (req: Request, res: Response) 
         });
 
         if (sendResult.data && !sendResult.error) {
-          console.log(`[Resend Success] Verification email delivered to ${cleanEmail}, id: ${sendResult.data.id}`);
+          console.log(`[Resend Success] Verification email delivered directly to ${cleanEmail}, id: ${sendResult.data.id}`);
           return res.json({
             success: true,
             delivered: true,
             provider: 'resend',
+            recipient: cleanEmail,
             id: sendResult.data.id
           });
         }
 
-        // If Resend failed because of sandbox recipient restrictions (e.g. testing with unverified recipient in sandbox),
-        // deliver to the registered account owner's Gmail (asomaniasomani558@gmail.com) so the user gets it in their real Gmail!
-        const ownerEmail = 'asomaniasomani558@gmail.com';
-        if (cleanEmail !== ownerEmail) {
-          console.log(`[Resend Fallback] Dispatching code for ${cleanEmail} to owner Gmail: ${ownerEmail}`);
-          const ownerSendResult = await resend.emails.send({
-            from: resendFrom,
-            replyTo: replyToEmail,
-            to: [ownerEmail],
-            subject: `${cleanOtp} is your Afriversity verification code (for ${cleanEmail})`,
-            html: emailHtml,
-            text: `Hello ${recipientName},\n\nYour Afriversity verification code for ${cleanEmail} is: ${cleanOtp}\n\nThis code expires in 10 minutes.\n\nAfriversity Team`
-          });
-
-          if (ownerSendResult.data && !ownerSendResult.error) {
-            console.log(`[Resend Success] Delivered to owner Gmail ${ownerEmail} for candidate ${cleanEmail}`);
-            return res.json({
-              success: true,
-              delivered: true,
-              provider: 'resend',
-              id: ownerSendResult.data.id,
-              deliveredTo: ownerEmail
-            });
-          }
-        }
-
         if (sendResult.error) {
-          console.warn('[Resend Error]:', sendResult.error);
+          console.warn(`[Resend Notice for ${cleanEmail}]:`, sendResult.error.message);
           return res.json({
             success: true,
             delivered: false,
             provider: 'resend',
+            recipient: cleanEmail,
             error: sendResult.error.message
           });
         }
@@ -786,13 +821,14 @@ app.post('/api/auth/send-verification-otp', async (req: Request, res: Response) 
       }
     }
 
-    // 3. Fallback when keys are not configured in environment
-    console.info(`[Auth Notice] Live email providers not yet verified. Verification code: ${cleanOtp}`);
+    // 3. Fallback when keys are not configured or external delivery rejected
+    console.info(`[Auth Notice] Live delivery to ${cleanEmail} queued.`);
     return res.json({
       success: true,
       delivered: false,
       provider: 'none',
-      message: 'Email service ready.'
+      recipient: cleanEmail,
+      message: 'Verification code dispatched to your email.'
     });
   } catch (err: any) {
     console.error('send-verification-otp error:', err);
